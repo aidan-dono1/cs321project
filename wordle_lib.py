@@ -1,5 +1,5 @@
 ##########################################################
-## Author:   Josh
+## Author:   Josh Morris
 ## Filename: wordle_lib.py
 ## Purpose:  Library of utility functions for the
 ##           CS321 final project Wordle game.
@@ -17,9 +17,9 @@ ABSENT  = 0  ## letter not in word
 
 WORDS = [
     "CRIMP", "GROAN", "FLASK", "TWIST", "PLUMB",
-    "DWARF", "FLUNG", "GNASH", "JOUST", "KNELT",
+    "DWARF", "FLUNG", "CRASH", "JOUST", "KNELT",
     "SCALP", "TROVE", "BLUNT", "CREPT", "SWAMP",
-    "FJORD", "GLINT", "PERCH", "STOMP", "WORDY",
+    "SWORD", "GLINT", "PERCH", "STOMP", "WORDY",
 ]
 
 
@@ -59,7 +59,7 @@ def is_valid_word(word):
 
 
 def format_result_string(guess, results):
-    ## Format: "RESULT:<GUESS>:<R0R1R2R3R4>"  e.g. "RESULT:CRANE:22001"
+    
     return "RESULT:{}:{}".format(guess, "".join(str(r) for r in results))
 
 
