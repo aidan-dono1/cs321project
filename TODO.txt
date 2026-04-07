@@ -1,0 +1,21 @@
+TODO ------
+1 - Assemble list of 5 letter words, in theme?
+  How many words? What is the theme? ArrayList structure
+2 - Server to select word (WOTD?) and send word to client
+  Make sure to not select same word twice in a row - "Fake random", server output and client input
+  Could use list of words for entire year and then pop used words out into a seperate list of already used words to ensure randomness and no repeats
+3 - Client program accepts and stores Word
+  Input from server, store locally for use in checking
+4 - Client program has "Wordle" guessing (Stretch - GUI)
+  5 letter checking, letter is in word, letter in correct place, 6 guesses
+  Letters in string seperated into list/array, letters entered with spaces, comparing one at a time to WORD
+  Printing in color?
+  Tell user which letters are correct/used
+5 - Client program shows user results (Success, # of guesses, username)
+  List of attempted words and how close each guess came - Print summary and remaining guesses
+6 - Client program tells server user has completed daily game
+  Send client username, number of guesses used, Won(T/F)
+7 - server closes connection, sends a "Goodbye" to client
+  Server confirms stored info, updates user info, closes connection to that user and tells them to wait a day
+8 - Server checks connections to see if a client has already played today
+  On new connection, run "Whoami" and compare to list of users who have already played today. If true, send "You already played, wait X hours til next day"
