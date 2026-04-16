@@ -4,6 +4,7 @@
  * Filename: server.java
  * Purpose: connect to client for CS321 project, to be used as a part of a
  * "Wordle" like program
+ *  Version: 2.0
  *
  *****************************************************/
 
@@ -15,115 +16,137 @@ import java.util.*;
 public class server
 {
     public static void main(String[] args) throws IOException
-    {	
-	if (args.length != 1)
-	    {
-		System.err.println("Usage: Java Server <port number>");
-		System.exit(1);
-	    } //end if
+    {   
+    if (args.length != 1)
+        {
+        System.err.println("Usage: Java Server <port number>");
+        System.exit(1);
+        }
 
-	int portNumber = Integer.parseInt(args[0]);
-	ServerSocket serverSocket = new ServerSocket(portNumber);
+    int portNumber = Integer.parseInt(args[0]);
+    ServerSocket serverSocket = new ServerSocket(portNumber);
 
-	LocalDate currentDate = LocalDate.now();
-	DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
-	int dayNumber = dayOfWeek.getValue();
-	
-	String[] words = {"Frankie(0)", "DeSales(1)", "Dooling(2)", "Shimkanon(3)", "Communication(4)", "HelloWorld(5)", "Student(6)"};
-	String wordOfTheDay = (words[dayNumber]);
-	
-	System.out.println("Server live! Running on port: " + portNumber);
-	System.out.println("Current Date : " + currentDate);
-	System.out.println("TESTING - WOTD: " + wordOfTheDay);
-	System.out.println("Ctrl-D + ENTER to shut down server");
-	
-	serverSocket.setSoTimeout(500);
+    LocalDate currentDate = LocalDate.now();
+        
+    System.out.println("Server live! Running on port: " + portNumber);
 
-	BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+    try
+    {
+        while(true)
+        {
+        try
+        {
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connection from: " +
+            clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+            new Handler(clientSocket).start();
+        }
+        catch (SocketTimeoutException e)
+        {
+            // accept() timed out
+        }
+        }
+    }
+    finally
+    {
+        serverSocket.close();
+    }
+    }
 
-	boolean running = true;
-
-	try
-	    {
-		while(running)
-		    {
-			if (!console.ready())
-			    {
-				// keep waiting for input
-			    }
-			else
-			    {
-				String line = console.readLine(); //check to see what was input
-				if (line == null) //EOF(control-D) entered
-				    {
-					System.out.println("Beginning server shutdown...");
-					running = false;
-					break;
-				    }
-			    }
-			try // look for clients
-			    {
-				//spawn handler thread for client conn
-				Socket clientSocket = serverSocket.accept();
-				System.out.println("Client connection from: " + clientSocket.getInetAddress() +
-						   ":" + clientSocket.getPort());
-				new Handler(clientSocket).start();
-			    } catch (SocketTimeoutException e)
-			    {
-				//accept() timed out
-			    }
-		    } // end while
-	    } // end try
-	finally
-	    {
-		serverSocket.close();
-		System.out.println("Server shutdown complete. Goodbye.");
-	    } //end finally
-    } // end main
     /*********************************************************
      * A handler thread class to work with a single client.
      *********************************************************/
     private static class Handler extends Thread
     {
-	private Socket socket;
-	private PrintWriter out;
-	private BufferedReader in;
-	private String inputLine, outputLine;
+    private Socket socket;
+    private PrintWriter out;
+    private BufferedReader in;
 
-	public Handler(Socket socket)
-	{
-	    this.socket = socket;
-	}
+    public Handler(Socket socket)
+    {
+        this.socket = socket;
+    }
     
-	public void run()
-	{
-	    try
-	    {
-		out = new PrintWriter(socket.getOutputStream(), true);
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    @Override
+    public void run()
+    {
+        try
+        {
+        out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-		inputLine = in.readLine();
-		while (inputLine != null)
-		{
-			out.println(inputLine);
-			inputLine = in.readLine();
-		} //end while
-	    } //end try
-	catch (IOException e)
-	{
-	    System.out.println(e);
-	}
-	finally
-	{
-	    try
-	    {
-		System.out.println("Client disconnected from: " + socket.getInetAddress() + ":" + socket.getPort());
-		socket.close();
-       	    }
-	    catch (IOException e)
-	    {
-	    }//end catch
-        } //end finally
-	} // end run
-    } //end handler
-} //end server
+        String input;
+        String wordOfTheDay = "APPLE"; // Placeholder for the actual WOTD logic
+            
+        while ((input = in.readLine()) != null)
+        {
+            if ("CONNECT".equals(input))
+            {
+            out.println("OK CONNECTED");
+            }
+            else if ("REQUEST WOTD".equals(input))
+            {
+            out.println(wordOfTheDay);
+            }
+            else if (input.startsWith("GUESS "))
+            {
+            String guess = input.substring(6).trim().toUpperCase();
+            out.println("PATTERN " + checkGuess(guess, wordOfTheDay));
+            }
+            else if (input.startsWith("RESULT"))
+            {
+            out.println("ACK RESULT");
+            }
+            else if (input.equals("DISCONNECT"))
+            {
+            out.println("OK BYE");
+            break;
+            }
+            else
+            {
+            out.println("ERROR UNKNOWN COMMAND");
+            }
+        }
+        }
+        catch (IOException e)
+        {
+        System.out.println(e);
+        }
+        finally
+        {
+        try
+        {
+            System.out.println("Client disconnected from: " +
+            socket.getInetAddress() + ":" + socket.getPort());
+            socket.close();
+        }
+        catch (IOException e)
+        {
+        }
+        }
+    }
+
+    private String checkGuess(String guess, String word) //Checking guess inside of the handler thread, since it is only relevant to that client
+    {
+        char[] result = new char[5];
+
+        for (int i = 0; i < 5; i++)
+        {
+        if (guess.charAt(i) == word.charAt(i))
+        {
+            result[i] = 'G';
+        }
+        else if (word.indexOf(guess.charAt(i)) >= 0)
+        {
+            result[i] = 'Y';
+        }
+        else
+        {
+            result[i] = 'B';
+        }
+        }
+
+        return new String(result);
+    }
+    }
+}
