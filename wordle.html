@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wordle Game Client</title>
+    <style>
+        body {
+            font-family: Arial Narrow Bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #000;
+            font-size: 32px;
+            text-align: center;
+            line-height: 60px;
+            text-transform: uppercase;
+        }
+        .green { 
+            background-color: #6aaa64; 
+        }
+        .yellow { 
+            background-color: #c9b458; 
+        }
+        .gray { 
+            background-color: #787c7e; 
+        }
+    </style>
+
+</head><!-- End of Head Tag -->
+<body>
+
+<h1>Wordle</h1>
+
+<div id="board"></div>
+
+<input id="guessInput" maxlength="5" placeholder="Enter guess"/>
+
+<script>
+    const board = document.getElementById("board");
+    const guessInput = document.getElementById("guessInput");
+
+    let row = 0;
+
+    const cells = [];
+    for (let r = 0; r < 6; r++) {
+        cells[r] = [];
+        for (let c = 0; c < 5; c++) {
+            const div = document.createElement("div");
+            div.classList.add("cell");
+            board.appendChild(div);
+            cells[r][c] = div;
+        }
+    }
+
+    const ws = new WebSocket("ws://localhost:8080");
+
+    ws.onopen = () => {
+        ws.send("CONNECT");
+        ws.send("REQUEST WOTD");
+    };
+
+    ws.onmessage = (msg) => {
+        const text = msg.data;
+
+        if (text.startsWith("PATTERN")) {
+            const pattern = text.substring(8);
+
+            for (let i = 0; i < 5; i++) {
+                const cell = cells[row][i];
+                const p = pattern[i];
+
+                if (p === 'G') cell.classList.add("green");
+                else if (p === 'Y') cell.classList.add("yellow");
+                else cell.classList.add("gray");
+            }
+
+            row++;
+        }
+    };
+
+    guessInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const guess = guessInput.value.toUpperCase();
+            if (guess.length !== 5) return;
+
+            for (let i = 0; i < 5; i++) {
+                cells[row][i].textContent = guess[i];
+            }
+
+            ws.send("GUESS " + guess);
+            guessInput.value = "";
+        }
+    });
+</script><!-- End of Script Tag -->
+
+</body>
+</html>
